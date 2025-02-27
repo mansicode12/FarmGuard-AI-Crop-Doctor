@@ -59,14 +59,15 @@ PlantPulse is an AI-powered mobile application designed to help farmers detect a
 #### **Backend (Node.js)**
 Create a `.env` file in the backend directory and add:
 ```bash
- JWT_SECRET_KEY="your_secret_key"
- MONGODB_CONNECTION_STRING="your_mongodb_uri"
+ API_KEY="your_crop.health_API_key"
+ accessKeyId="your_S3_BucketID"
+ secretAccess="your_S3_secretAccessKey"
 ```
 
 #### **Flask (ML Model API)**
 Create a `.env` file in the Flask directory and add:
 ```bash
- API_KEY="your_api_key"
+ API_KEY="your_Gemini_api_key"
 ```
 
 ### **4. Run the Application**
