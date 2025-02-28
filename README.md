@@ -1,5 +1,8 @@
 # PlantPulse - AI Crop Disease Detection & Treatment Advisor
 
+## Frontend Repository
+- Link: [PlantPulse Frontend Application](https://github.com/ameyjoshi3068/dypcoe_hackathon)
+
 ## Overview
 PlantPulse is an AI-powered mobile application designed to help farmers detect and manage crop diseases efficiently. By leveraging Convolutional Neural Networks (CNNs), image processing, and AI-generated recommendations, PlantPulse provides farmers with early warnings, treatment suggestions, and prevention techniques. The Flutter-based mobile app ensures a user-friendly experience, enabling modern solutions for agricultural challenges.
 
