@@ -95,5 +95,4 @@ Create a `.env` file in the Flask directory and add:
 For any questions, feel free to reach out to Team Neural Knights.
 
 ## Presentation
-[Project PPT](#https://drive.google.com/file/d/1IJ0FKWMBDul37KM5-d8QNJnOfvlimpfj/view?usp=sharing) (Provide actual link)
-
+[Project PPT](https://drive.google.com/file/d/1IJ0FKWMBDul37KM5-d8QNJnOfvlimpfj/view?usp=sharing)
