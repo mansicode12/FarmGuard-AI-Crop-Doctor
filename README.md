@@ -98,7 +98,7 @@ Create a `.env` file in the Flask directory and add:
 - **Multilingual Support:** Adding regional languages for better accessibility.
 - **Community Support Integration:** Enhancing forums and chat options for better farmer interaction and shared experiences.
 ---
-For any questions, feel free to reach out to us.
+For any questions, feel free to reach out to us at [padoleprajwal2106@gmail.com](mailto:padoleprajwal2106@gmail.com).
 
 ## Presentation
 [Project PPT](https://drive.google.com/file/d/1IJ0FKWMBDul37KM5-d8QNJnOfvlimpfj/view?usp=sharing)
