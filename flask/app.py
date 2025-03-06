@@ -60,7 +60,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Image size expected by model
-IMG_SIZE = (224, 224)  # Updated to match model's expected input size
+IMG_SIZE = (150, 150)  
+  # Updated to match model's expected input size
 
 # Route for home page
 @app.route("/")
@@ -141,6 +142,7 @@ def predict():
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(file_path)
+
     
     try:
         # Load and preprocess the image
@@ -163,31 +165,6 @@ def predict():
             "severity": round(severity, 2),
             "image_url": f"/{file_path}"
         })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# @app.route('/generate-docs', methods=['POST'])
-# def generate_docs():
-    print("generate_docs function called in Flask")
-    
-    try:
-        data = request.get_json()
-        required_keys = {'crop', 'disease', 'longitude', 'latitude'}
-
-        if not required_keys.issubset(data.keys()):
-            return jsonify({"error": "Missing required fields."}), 400
-        
-        crop = data['crop']
-        disease = data['disease']
-        location = f"Longitude: {data['longitude']}, Latitude: {data['latitude']}"
-
-        response_text = generate_prediction(disease, crop, location)
-        
-        if response_text:
-            return jsonify({"Fertilizers etc": response_text})
-        else:
-            return jsonify({"error": "Failed to generate prediction"}), 500
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -259,55 +236,6 @@ def weatherprediction():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# @app.route('/doseprediction', methods=['POST'])
-# def doseprediction():
-#     print("doseprediction function called in Flask")
-    
-#     try:
-#         data = request.get_json()
-#         required_keys = {'crop_type', 'growth_stage', 'fertilizer_name', 'plot_size'}
-
-#         if not required_keys.issubset(data.keys()):
-#             return jsonify({"error": "Missing required fields."}), 400
-        
-#         Crop_type = data['crop_type']
-#         Growth_stage = data['growth_stage']
-#         Fertilizer_name = data['fertilizer_name']
-#         Plot_size = data['plot_size']
-        
-#         response_text = dosepred(Crop_type, Growth_stage, Fertilizer_name, Plot_size)
-        
-#         if not response_text:
-#             return jsonify({"error": "Empty response from dosepred"}), 500
-        
-#         # Ensure it's valid JSON (clean up text if needed)
-#         try:
-#             if isinstance(response_text, str):
-#                 response_text = response_text.strip()  # Remove extra whitespace/newlines
-#                 if response_text.startswith('```json'):
-#                     response_text = response_text.replace('```json', '').replace('```', '').strip()
-                
-#                 response_data = json.loads(response_text)
-#             else:
-#                 response_data = response_text
-
-#             if not isinstance(response_data, dict):
-#                 raise ValueError("Response is not a JSON object")
-
-#         except json.JSONDecodeError as e:
-#             print("JSON parsing error:", e)
-#             return jsonify({"error": "Invalid JSON format in dosepred response"}), 500
-        
-#         # Validate expected keys
-#         if "fertilizer" in response_data and "quantity" in response_data:
-#             return jsonify({"Dose prediction": response_data})
-#         else:
-#             return jsonify({"error": "Missing expected keys in dosepred response"}), 500
-
-#     except Exception as e:
-#         print("Unexpected error:", e)
-#         traceback.print_exc()
-#         return jsonify({"error": str(e)}), 500
 @app.route('/doseprediction', methods=['POST'])
 def doseprediction():
     print("doseprediction function called in Flask")

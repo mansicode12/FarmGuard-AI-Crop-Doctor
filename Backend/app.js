@@ -77,7 +77,7 @@ const API_KEY = process.env.API_KEY  // Replace with your API key
 async function identifyCrop(imageUrl) {
     try {
         const response = await axios.post(
-            "https://crop.kindwise.com/api/v1/identification",
+            "http://localhost:5000/predict",
             {
                 images: [imageUrl], // Passing image URL in required format
                 similar_images: true
@@ -89,12 +89,11 @@ async function identifyCrop(imageUrl) {
                 }
             }
         );
-        // console.log("Identification response:", response.data)
-        // console.log("Identification response123456:", response.data.result.is_plant.probability)
+
         if(response.data.result.is_plant.probability < 0.4){
             return "invalid";
         }
-        const diseaseDetails = await diseaseDetailsget(response.data.access_token);
+        const diseaseDetails = await diseaseDetailsget();
         return diseaseDetails;
         // return response.data; // Return API response
     } catch (error) {
@@ -102,10 +101,10 @@ async function identifyCrop(imageUrl) {
         throw new Error("Identification failed");
     }
 }
-async function diseaseDetailsget(access_token) {
+async function diseaseDetailsget() {
     try {
         const response = await axios.get(
-            `https://crop.kindwise.com/api/v1/identification/${access_token}?details=description,treatment,symptoms,severity,spreading&language=en`,
+            `localhost:5000/predict`,
             {
                 headers: {
                     "Content-Type": "application/json",
