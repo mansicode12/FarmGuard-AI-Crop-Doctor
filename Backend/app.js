@@ -115,9 +115,8 @@ async function diseaseDetailsget() {
         if(response.data.result.is_plant.probability < 0.4){
             return "invalid";
         }
-        // console.log("Disease Details Response:", response.data.result.disease.suggestions);
         const diseaseDetailsjson = await extractDiseaseInfo(response.data);
-        console.log("Disease Details Response json:", diseaseDetailsjson);
+            
         return diseaseDetailsjson;// Return API response
     } catch (error) {
         console.error("Error in fetching disease details:", error.response?.data || error.message);
