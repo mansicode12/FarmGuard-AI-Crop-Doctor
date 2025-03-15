@@ -98,7 +98,7 @@ Create a `.env` file in the Flask directory and add:
 ---
 For any questions, feel free to reach out to us at [padoleprajwal2106@gmail.com](mailto:padoleprajwal2106@gmail.com).
 
-### App Insights
+## App Insights
 
 <img width="250" alt="screenshot/1.png" src="screenshot/1.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/2.png" src="screenshot/2.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/3.png" src="screenshot/3.jpg" style="margin: 10px;">
 -------------------------------------------------------------------------------------
