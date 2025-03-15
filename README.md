@@ -101,7 +101,7 @@ For any questions, feel free to reach out to us at [padoleprajwal2106@gmail.com]
 ### App Insights
 
 <img width="250" alt="screenshot/1.png" src="screenshot/1.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/2.png" src="screenshot/2.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/3.png" src="screenshot/3.jpg" style="margin: 10px;">
-
+-----------------------------------------------------------------------------------------
 <img width="250" alt="screenshot/4.png" src="screenshot/4.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/5.png" src="screenshot/5.jpg" style="margin: 10px;"> <img width="250" alt="screenshot/6.png" src="screenshot/6.jpg" style="margin: 10px;">
 ## Presentation
 [Project PPT](https://drive.google.com/file/d/1IJ0FKWMBDul37KM5-d8QNJnOfvlimpfj/view?usp=sharing)
