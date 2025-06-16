@@ -1,8 +1,11 @@
 Flask==2.3.2
-tensorflow
+tensorflow==2.18.0
 numpy
-Pillow
 opencv-python
+Pillow
 python-dotenv
-google-generativeai
-protobuf
+Flask-Login
+Flask-SQLAlchemy
+requests
+fpdf
+gunicorn

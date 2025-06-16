@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmGuard Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-green-700 text-white text-center py-6 shadow-lg">
+    <h1 class="text-3xl font-bold">🌾 FarmGuard – AI Crop Doctor</h1>
+  </header>
+
+  <!-- Container -->
+  <main class="flex-1 w-full max-w-3xl mx-auto px-4 py-8">
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-md">
+      <h2 class="text-xl font-semibold text-center mb-6">👋 Hello, {{ session.get('username', 'Guest') }}!</h2>
+
+      <form action="/predict" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div>
+          <label for="plant" class="block mb-2 font-medium text-green-400"><i class="bi bi-flower3 mr-2"></i>Select Crop Type</label>
+          <select id="plant" name="plant" required class="w-full p-3 rounded-lg bg-gray-700 text-white border border-green-500">
+            <option value="" disabled selected>Choose your crop</option>
+            <option value="Tomato">🍅 Tomato</option>
+            <option value="Wheat">🌾 Wheat</option>
+            <option value="Rice">🌱 Rice</option>
+            <option value="Maize">🌽 Maize</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="file" class="block mb-2 font-medium text-green-400"><i class="bi bi-image mr-2"></i>Upload Leaf Image</label>
+          <input type="file" name="file" id="file" accept="image/*" required class="w-full p-3 rounded-lg bg-gray-700 text-white border border-green-500" />
+        </div>
+
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">🔍 Predict Disease</button>
+      </form>
+
+      {% if prediction %}
+      <div class="mt-8 bg-gray-700 p-4 rounded-xl border-l-4 border-green-500">
+        <h3 class="text-lg font-semibold text-green-300 mb-2">🧪 Prediction Result</h3>
+        <p><strong>Disease:</strong> {{ prediction }}</p>
+        <p><strong>Confidence:</strong> {{ confidence }}</p>
+        {% if dosage %}<p><strong>Dosage Advice:</strong> {{ dosage }}</p>{% endif %}
+        {% if note %}<p><strong>Note:</strong> {{ note }}</p>{% endif %}
+      </div>
+
+      {% if image_url %}
+      <div class="mt-6 text-center">
+        <h3 class="text-lg text-green-300 mb-2">📷 Uploaded Image</h3>
+        <img src="{{ image_url }}" alt="Uploaded Image" class="max-w-full rounded-lg border border-green-400" />
+      </div>
+      {% endif %}
+
+      {% if weather_info %}
+      <div class="mt-6 bg-gray-700 p-4 rounded-xl border-l-4 border-green-500">
+        <h3 class="text-lg text-green-300 mb-2">🌤️ Current Weather</h3>
+        <p><strong>Temperature:</strong> {{ weather_info.temperature }} °C</p>
+        <p><strong>Condition:</strong> {{ weather_info.description }}</p>
+        <p><strong>Suggestion:</strong> {{ weather_info.suggestion }}</p>
+      </div>
+      {% endif %}
+
+      {% if report_path %}
+      <div class="mt-6 text-center">
+        <h3 class="text-lg text-green-300 mb-2">📄 Download Report</h3>
+        <a href="{{ report_path }}" target="_blank" class="inline-block bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">⬇️ Download PDF</a>
+      </div>
+      {% endif %}
+      {% endif %}
+
+      <div class="mt-8 space-y-4">
+        <a href="/news" class="block w-full bg-blue-600 hover:bg-blue-500 text-white text-center py-3 rounded-lg">📰 View Latest Agriculture News</a>
+        <a href="{{ url_for('community') }}" class="block w-full bg-purple-600 hover:bg-purple-500 text-white text-center py-3 rounded-lg">👨‍🌾 Visit Community Forum</a>
+      </div>
+
+      <!-- ✅ Chatbot -->
+      <div class="mt-10 bg-gray-700 p-4 rounded-xl border-l-4 border-green-500">
+        <h3 class="text-lg font-semibold text-green-300 mb-2">🤖 FarmGuard AI Chatbot</h3>
+        <div id="chatDisplay" class="h-60 overflow-y-auto bg-gray-800 p-2 rounded text-sm text-white mb-2"></div>
+        <div class="flex">
+          <input id="chatInput" type="text" placeholder="Ask me anything about crop health..." class="flex-1 p-2 bg-gray-600 text-white rounded-l-lg focus:outline-none">
+          <button onclick="sendMessage()" class="bg-green-600 hover:bg-green-500 px-4 rounded-r-lg text-white font-bold">Send</button>
+        </div>
+      </div>
+
+      <div class="text-center mt-6">
+        <a href="/logout" class="text-red-400 hover:underline">🚪 Logout</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-center text-gray-400 text-sm py-4 border-t border-gray-700">
+    © 2025 <strong class="text-green-400">FarmGuard</strong> by Mansi Bisht 🌿
+  </footer>
+
+  <!-- ✅ Chatbot Script -->
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const display = document.getElementById('chatDisplay');
+      const message = input.value.trim();
+      if (!message) return;
+      display.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: message })
+        });
+        const data = await res.json();
+        display.innerHTML += `<div><strong>AI:</strong> ${data.response}</div>`;
+        input.value = '';
+        display.scrollTop = display.scrollHeight;
+      } catch (err) {
+        display.innerHTML += `<div><strong>AI:</strong> Error getting response.</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

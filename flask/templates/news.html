@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FarmGuard | Agriculture News</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-tr from-green-900 via-lime-800 to-green-700 text-white font-[Poppins] min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-green-700 text-white py-6 shadow text-center text-3xl font-bold">
+    📰 FarmGuard – Agri News
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto p-6 mt-10 bg-white rounded-2xl shadow-2xl text-gray-900">
+    <h2 class="text-2xl font-semibold text-green-800 mb-6">Latest Agri Headlines 🌾</h2>
+
+    {% if articles %}
+      <div class="grid md:grid-cols-2 gap-6">
+        {% for article in articles %}
+          <div class="bg-green-50 p-5 rounded-xl border-l-4 border-green-400 shadow hover:shadow-md transition">
+            <h3 class="font-bold text-lg text-green-800">{{ article.title }}</h3>
+            {% if article.description %}
+              <p class="text-gray-700 mt-2 text-sm">{{ article.description }}</p>
+            {% endif %}
+            {% if article.publishedAt %}
+              <p class="text-right text-xs mt-2 text-gray-500">Published: {{ article.publishedAt[:10] }}</p>
+            {% endif %}
+            {% if article.url %}
+              <a href="{{ article.url }}" target="_blank" class="text-sm text-green-700 font-semibold mt-3 inline-block hover:underline">Read More →</a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-600 text-center mt-6">No news available right now. Please check back later.</p>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="mt-10 text-center">
+      <a href="{{ url_for('dashboard') }}" class="inline-block text-green-700 font-semibold hover:underline">← Back to Dashboard</a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-sm text-gray-300 mt-10 pb-6">
+    © 2025 <strong>FarmGuard</strong> – Empowering Farmers with Knowledge 🌿
+  </footer>
+</body>
+</html>

@@ -3,66 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant Disease Detection</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        .upload-container {
-            margin: 20px auto;
-            padding: 20px;
-            border: 2px dashed #ccc;
-            width: 300px;
-        }
-        .result {
-            margin-top: 20px;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .loader {
-            border: 5px solid #f3f3f3; /* Light grey */
-            border-top: 5px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none; /* Hidden by default */
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <title>FarmGuard – AI Crop Doctor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Plant Disease Detection</h1>
+
+    <h1>🌿 FarmGuard – AI Crop Doctor 🌿</h1>
+    <p style="font-style: italic; color: #555;">Scan. Detect. Protect your crops in seconds.</p>
+
     <div class="upload-container">
         <select id="plantType">
-            <option value="wheat">Wheat</option>
-            <option value="rice">Rice</option>
-            <option value="maize">Maize</option>
-            <option value="tomato">Tomato</option>
-            <option value="potato">Potato</option>  
-            <option value="pepper">Pepper</option>  <!-- Added Pepper option -->
+            <option value="wheat">🌾 Wheat</option>
+            <option value="rice">🍚 Rice</option>
+            <option value="maize">🌽 Maize</option>
+            <option value="tomato">🍅 Tomato</option>
         </select>
+
         <input type="file" id="fileInput" accept="image/*">
+        <small style="color: #777;">Supported: JPEG, PNG, Max 5MB</small>
+
         <button onclick="uploadImage()">Upload and Predict</button>
+        <button onclick="resetForm()" class="secondary" style="margin-top: 10px;">Reset</button>
     </div>
+
     <div class="loader" id="loader"></div>
+
     <div class="result">
         <h2>Prediction: <span id="predictionResult"></span></h2>
         <h2>Severity: <span id="severityResult"></span>%</h2>
         <h3>Uploaded Image:</h3>
         <img id="uploadedImage" src="" alt="Uploaded Image">
     </div>
+
+    <footer>
+        © 2025 FarmGuard by Mansi Bisht 🌱
+    </footer>
 
     <script>
         async function uploadImage() {
@@ -83,11 +58,10 @@
             formData.append('file', file);
             formData.append('plant', plantType);
 
-            // Show loader
             loader.style.display = 'block';
 
             try {
-                const response = await fetch('/predict', {
+               const response = await fetch('http://localhost:4000/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -99,13 +73,23 @@
                     uploadedImage.src = data.image_url;
                 } else {
                     predictionResult.textContent = 'Error: ' + data.error;
+                    severityResult.textContent = '-';
+                    uploadedImage.src = '';
                 }
             } catch (error) {
                 predictionResult.textContent = 'Error: ' + error.message;
+                severityResult.textContent = '-';
+                uploadedImage.src = '';
             } finally {
-                // Hide loader
                 loader.style.display = 'none';
             }
+        }
+
+        function resetForm() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('predictionResult').textContent = '';
+            document.getElementById('severityResult').textContent = '';
+            document.getElementById('uploadedImage').src = '';
         }
     </script>
 </body>

@@ -1,300 +1,168 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.utils import secure_filename
-from gen_docs import generate_prediction,coordinate,weatherpred,dosepred
-import json
-import traceback
+from customlogic import predict_disease_custom, generate_doc_custom, weather_forecast_custom, fetch_news_custom
+from customlogic import ask_chatbot
 import os
-import cv2
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
-import json
-import re
 
-# Initialize Flask app
 app = Flask(__name__)
+app.secret_key = "farmguard_secret_key"
+app.config["UPLOAD_FOLDER"] = os.path.join("static", "uploads")
+app.config["REPORT_FOLDER"] = os.path.join("static", "reports")
 
-# Load models
-models = {
-    "wheat": tf.keras.models.load_model("model/wheat_leaf_disease_model.h5"),
-    "rice": tf.keras.models.load_model("model/improved_rice_leaf_disease_model.h5"),
-    "maize": tf.keras.models.load_model("model/maize_leaf_disease_model.h5"),
-    "tomato": tf.keras.models.load_model("model/tomato_disease_model.h5"),
-    "potato": tf.keras.models.load_model("model/potato_disease_model.h5"),
-    "pepper": tf.keras.models.load_model("model/pepper_disease_model.h5")  # Added Pepper Model
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+os.makedirs(app.config["REPORT_FOLDER"], exist_ok=True)
+
+# ✅ Dosage advice per crop & disease
+dosage_advice = {
+    "Wheat": {
+        "Rust": "Spray Propiconazole 25% EC at 500 ml/ha.",
+        "Healthy": "No signs of disease. Continue standard practices."
+    },
+    "Tomato": {
+        "Mosaic_Virus": "Use virus-resistant seeds. Remove infected plants.",
+        "Spot": "Apply copper-based fungicides. Maintain good airflow.",
+        "Healthy": "No disease detected. Maintain proper care."
+    },
+    "Maize": {
+        "Rust": "Use Mancozeb 75% WP fungicide as per label.",
+        "Healthy": "No issues detected. Maintain regular care."
+    },
+    "Rice": {
+        "Blight": "Apply copper-based bactericides. Avoid over-irrigation.",
+        "Healthy": "No issues detected. Maintain field hygiene."
+    }
 }
 
-# Class labels for each model
-class_labels = {
-    "wheat": ['Healthy', 'Septoria', 'Stripe Rust'],
-    "rice": ['Blast', 'Blight', 'Tungro'],
-    "maize": ['Blight', 'Common Rust', 'Gray Leaf Spot', 'Healthy'],
-    "tomato": [
-        'Tomato_Bacterial_spot',
-        'Tomato_Early_blight',
-        'Tomato_Late_blight',
-        'Tomato_Leaf_Mold',
-        'Tomato_Septoria_leaf_spot',
-        'Tomato_Spider_mites_Two_spotted_spider_mite',
-        'Tomato_Target_Spot',
-        'Tomato_Tomato_YellowLeaf_Curl_Virus',
-        'Tomato_Tomato_mosaic_virus',
-        'Tomato_healthy'
-    ],
-    "potato": [
-        'Potato__Early_blight',
-        'Potato__Late_blight',
-        'Potato__healthy'
-    ],
-    "pepper": [  # Added Pepper Classes
-        'Pepper_bell__Bacterial_spot',
-        'Pepper_bell__healthy'
-    ]
-}
-
-# Ensure upload folder exists
-UPLOAD_FOLDER = "static/uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Set upload folder in Flask config
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-# Image size expected by model
-IMG_SIZE = (150, 150)  
-  # Updated to match model's expected input size
-
-# Route for home page
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("login.html")
 
-def create_leaf_mask(image):
-    """Create a mask for the leaf area, excluding the background."""
-    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    
-    # Define green range for healthy leaf tissue
-    lower_green = np.array([25, 20, 20])
-    upper_green = np.array([95, 255, 255])
-    leaf_mask = cv2.inRange(hsv, lower_green, upper_green)
-    
-    # Define brown color for diseased areas
-    lower_brown = np.array([10, 20, 20])
-    upper_brown = np.array([25, 255, 255])
-    brown_mask = cv2.inRange(hsv, lower_brown, upper_brown)
-    
-    # Combine masks
-    leaf_mask = cv2.bitwise_or(leaf_mask, brown_mask)
-    
-    # Morphological transformations
-    kernel = np.ones((5,5), np.uint8)
-    leaf_mask = cv2.morphologyEx(leaf_mask, cv2.MORPH_CLOSE, kernel)
-    leaf_mask = cv2.morphologyEx(leaf_mask, cv2.MORPH_OPEN, kernel)
-    
-    return leaf_mask
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        session["username"] = username
+        session["password"] = password
+        return redirect(url_for("dashboard"))
+    return render_template("register.html")
 
-def segment_diseased_regions(image_path):
-    img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    leaf_mask = create_leaf_mask(img)
-    
-    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    
-    # Define disease color ranges
-    lower_disease1 = np.array([15, 50, 50])
-    upper_disease1 = np.array([30, 255, 255])
-    lower_disease2 = np.array([0, 0, 0])
-    upper_disease2 = np.array([180, 255, 30])
-    
-    disease_mask1 = cv2.inRange(hsv, lower_disease1, upper_disease1)
-    disease_mask2 = cv2.inRange(hsv, lower_disease2, upper_disease2)
-    disease_mask = cv2.bitwise_or(disease_mask1, disease_mask2)
-    
-    kernel = np.ones((3,3), np.uint8)
-    disease_mask = cv2.morphologyEx(disease_mask, cv2.MORPH_OPEN, kernel)
-    disease_mask = cv2.morphologyEx(disease_mask, cv2.MORPH_CLOSE, kernel)
-    
-    final_disease_mask = cv2.bitwise_and(disease_mask, leaf_mask)
-    
-    return final_disease_mask, leaf_mask
+@app.route("/login", methods=["POST"])
+def login():
+    username = request.form["username"]
+    password = request.form["password"]
+    if session.get("username") == username and session.get("password") == password:
+        return redirect(url_for("dashboard"))
+    return render_template("login.html", error="Invalid credentials")
 
-def calculate_severity(disease_mask, leaf_mask):
-    diseased_pixels = np.sum(disease_mask == 255)
-    total_leaf_pixels = np.sum(leaf_mask == 255)
-    
-    if total_leaf_pixels == 0:
-        return 0.0
-    
-    severity = (diseased_pixels / total_leaf_pixels) * 100
-    return min(severity, 100.0)
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
 
-@app.route('/predict', methods=['POST'])
+@app.route("/dashboard")
+def dashboard():
+    if "username" not in session:
+        return redirect(url_for("home"))
+    return render_template("dashboard.html")
+
+@app.route("/predict", methods=["POST"])
 def predict():
     if 'file' not in request.files or 'plant' not in request.form:
-        return jsonify({"error": "Missing file or plant type"}), 400
-    
+        return redirect(url_for('dashboard'))
+
     file = request.files['file']
-    plant = request.form['plant']
-    
-    if file.filename == '' or plant not in models:
-        return jsonify({"error": "Invalid file or plant type"}), 400
-    
+    plant = request.form['plant'].strip().lower()
+
+    if file.filename == '':
+        return redirect(url_for('dashboard'))
+
     filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(file_path)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(filepath)
 
-    
     try:
-        # Load and preprocess the image
-        img = image.load_img(file_path, target_size=IMG_SIZE)
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0)
-        img_array /= 255.0  # Normalize pixel values
+        result = predict_disease_custom(filepath, plant)
+        prediction = result.get("prediction", "Unknown")
+        confidence = result.get("confidence", 0)
+        note = result.get("note", "")
 
-        # Predict disease
-        prediction = models[plant].predict(img_array)
-        predicted_class = np.argmax(prediction, axis=1)[0]
-        disease_name = class_labels[plant][predicted_class]
-        
-        # Calculate severity
-        disease_mask, leaf_mask = segment_diseased_regions(file_path)
-        severity = calculate_severity(disease_mask, leaf_mask)
-        
-        return jsonify({
-            "disease": disease_name,
-            "severity": round(severity, 2),
-            "image_url": f"/{file_path}"
+        crop_key = plant.capitalize()
+        disease_key = prediction.replace(" ", "_")
+        dosage = dosage_advice.get(crop_key, {}).get(disease_key, "Dosage advice not found.")
+
+        weather_info = weather_forecast_custom({"city": "Dehradun"})
+        report_result = generate_doc_custom({
+            "crop": plant,
+            "disease": prediction,
+            "confidence": confidence,
+            "recommendation": dosage,
+            "area": "N/A",
+            "dosage": dosage
         })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        report_path = report_result.get("download_link", None)
 
-
-@app.route('/generate-docs', methods=['POST'])
-def generate_docs():
-    print("generate_docs function called in Flask")
-
-    try:
-        data = request.get_json()
-        required_keys = {'crop', 'disease', 'longitude', 'latitude'}
-
-        if not required_keys.issubset(data.keys()):
-            return jsonify({"error": "Missing required fields."}), 400
-
-        crop = data['crop']
-        disease = data['disease']
-        location = f"Longitude: {data['longitude']}, Latitude: {data['latitude']}"
-
-        response_text = generate_prediction(disease, crop, location)
-
-        # Debug: Print raw response
-        print("Raw Response from generate_prediction:", response_text)
-
-        if not response_text:
-            return jsonify({"error": "Empty response from generate_prediction"}), 500
-
-        # Remove Markdown code block formatting (```json ... ```)
-        cleaned_response = re.sub(r'```json\n(.*?)\n```', r'\1', response_text, flags=re.DOTALL).strip()
-
-        try:
-            response_json = json.loads(cleaned_response)  # Now, this should work
-        except json.JSONDecodeError:
-            return jsonify({"error": "Still invalid JSON format", "raw_response": cleaned_response}), 500
-
-        # Extract only required keys
-        filtered_response = {
-            "Fertilizers": response_json.get("Fertilizers", []),
-            "Pesticides & Fungicides": response_json.get("Pesticides & Fungicides", [])
-        }
-
-        return jsonify(filtered_response)
+        return render_template(
+            "dashboard.html",
+            prediction=prediction,
+            confidence=confidence,
+            note=note,
+            dosage=dosage,
+            weather_info=weather_info,
+            report_path=report_path,
+            image_url=url_for('static', filename='uploads/' + filename)
+        )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"[ERROR] Prediction failed: {e}")
+        return render_template("dashboard.html",
+            prediction="Error",
+            confidence="",
+            note=str(e),
+            dosage="N/A",
+            weather_info={},
+            report_path=None,
+            image_url=None
+        )
 
-@app.route('/weatherprediction', methods=['POST'])
-def weatherprediction():
-    print("weatherprediction function called in Flask")
+# ✅ Updated news route using correct function
+@app.route("/news")
+def news():
+    articles = fetch_news_custom()
+    if "error" in articles:
+        return render_template("news.html", error=articles["error"])
+    return render_template("news.html", articles=articles["articles"])
+
+# ✅ New weather API route
+@app.route("/weather")
+def weather():
+    city = request.args.get("city", "Dehradun")
+    weather_data = weather_forecast_custom({"city": city})
+    return weather_data
+
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    user_input = data.get('message', '')
+    if not user_input:
+        return jsonify({'response': "No input provided"}), 400
     
-    try:
-        data = request.get_json()
-        required_keys = {'crop', 'disease', 'duration', 'location'}
+    reply = ask_chatbot(user_input)
+    return jsonify({'response': reply})
 
-        if not required_keys.issubset(data.keys()):
-            return jsonify({"error": "Missing required fields."}), 400
-        Location = data['location']
-        Crop = data['crop']
-        Disease = data['disease']
-        Duration = data['duration']
-        print(Location)
-        response_text = weatherpred(Disease,Crop,Duration,Location)
-        
-        if response_text:
-            return jsonify({"Weather prediction is ": response_text})
-        else:
-            return jsonify({"error": "Failed to generate prediction"}), 500
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route("/community")
+def community():
+    return render_template("community.html")
+# Health check endpoint (Render uses this to check if your app is alive)
+@app.route("/health")
+def health():
+    return {"status": "OK", "message": "FarmGuard backend is healthy."}
 
-@app.route('/doseprediction', methods=['POST'])
-def doseprediction():
-    print("doseprediction function called in Flask")
-    
-    try:
-        data = request.get_json()
-        required_keys = {'crop_type', 'growth_stage', 'fertilizer_name', 'plot_size'}
-
-        # if not required_keys.issubset(data.keys()):
-        #     return jsonify({"error": "Missing required fields."}), 400
-        
-        Crop_type = data['crop_type']
-        Growth_stage = data['growth_stage']
-        Fertilizer_name = data['fertilizer_name']
-        Plot_size = data['plot_size']
-        
-        response_text = dosepred(Crop_type, Growth_stage, Fertilizer_name, Plot_size)
-        print("Raw response from dosepred:", repr(response_text))  # Log full output
-        
-        if not response_text:
-            return jsonify({"error": "Empty response from dosepred"}), 500
-        
-        # Ensure AI response is valid JSON
-        try:
-            if isinstance(response_text, str):
-                response_text = response_text.strip()  # Remove whitespace/newlines
-                
-                # Remove Markdown-style JSON wrappers
-                if response_text.startswith('```json'):
-                    response_text = response_text.replace('```json', '').replace('```', '').strip()
-                
-                # Extract JSON content only
-                start = response_text.find('{')
-                end = response_text.rfind('}')
-                if start == -1 or end == -1:
-                    raise ValueError("No JSON object found in response")
-                
-                clean_json = response_text[start:end + 1]
-                response_data = json.loads(clean_json)
-            else:
-                response_data = response_text
-
-            if not isinstance(response_data, dict):
-                raise ValueError("Response is not a JSON object")
-
-        except (json.JSONDecodeError, ValueError) as e:
-            print("JSON parsing error:", e)
-            return jsonify({"error": "Invalid JSON format in dosepred response"}), 500
-        
-        # Validate expected keys
-        if "fertilizer" in response_data and "quantity" in response_data:
-            return jsonify({"Dose prediction": response_data})
-        else:
-            return jsonify({"error": "Missing expected keys in dosepred response"}), 500
-
-    except Exception as e:
-        print("Unexpected error:", e)
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
+# Run locally only (won't be used on Render, but useful for testing)
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    # Set host='0.0.0.0' and port=5000 so it works locally
+    app.run(debug=True, host="0.0.0.0", port=5000)
+
+
