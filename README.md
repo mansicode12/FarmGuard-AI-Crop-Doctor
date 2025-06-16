@@ -23,6 +23,7 @@ FarmGuard is an AI-powered web app that helps farmers identify tomato plant dise
 🧑‍🌾 Community Tab (optional) – Discuss and learn from fellow farmers.
 ## 🖼️ Screenshots
 in folder
+
 🧠 Tech Stack
 Frontend: Tailwind CSS, Express.js, HTML
 
