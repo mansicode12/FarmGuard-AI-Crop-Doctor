@@ -38,3 +38,4 @@ Thumbs.db
 # 🖼️ Static upload and report folders (optional – if storing runtime files only)
 flask/static/uploads/
 flask/static/reports/
+venv/ 
