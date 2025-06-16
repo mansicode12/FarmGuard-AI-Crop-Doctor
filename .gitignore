@@ -9,14 +9,14 @@ models/test*
 models/placeholder*
 
 # ✅ Keep all your real/dummy models (like tomato_model.h5, maize.pkl)
-!models/*.h5
-!models/*.pkl
+models/*.h5
+models/*.pkl
 
 # 📁 Keep model folder even if empty
 !models/.gitkeep
 
 # 🐍 Python virtual environments
-venv/
+
 **/venv/
 
 # 🔁 Python cache and compiled files
