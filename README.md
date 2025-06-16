@@ -24,18 +24,18 @@ FarmGuard is an AI-powered web app that helps farmers identify tomato plant dise
 ## 🖼️ Screenshots
 in folder
 
-🧠 Tech Stack
-Frontend: Tailwind CSS, Express.js, HTML
+🛠 Tech Stack
+🐍 Flask (Python backend)
 
-Backend: Flask (Python), TensorFlow, OpenCV, FPDF, OpenRouter API
+🖼 Tailwind CSS (UI)
 
-APIs:
+📦 Express.js (upload server)
 
-OpenRouter AI – Free-tier AI chatbot
+🧠 TensorFlow (Tomato model)
 
-OpenWeatherMap – Weather forecast
+🌤 OpenWeather API
 
-NewsAPI – Farming-related news
+💬 OpenRouter AI (Chatbot)
 
 📁 Tomato Model Only (Real)
 ✅ Tomato – Real model trained using PlantVillage dataset
