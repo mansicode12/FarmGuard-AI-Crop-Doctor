@@ -155,14 +155,10 @@ def chat():
 @app.route("/community")
 def community():
     return render_template("community.html")
-# Health check endpoint (Render uses this to check if your app is alive)
 @app.route("/health")
 def health():
     return {"status": "OK", "message": "FarmGuard backend is healthy."}
 
-# Run locally only (won't be used on Render, but useful for testing)
 if __name__ == "__main__":
-    # Set host='0.0.0.0' and port=5000 so it works locally
-    app.run(debug=True, host="0.0.0.0", port=5000)
-
+    app.run(debug=True)
 
