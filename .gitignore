@@ -1,0 +1,40 @@
+# 🔒 Environment Files
+**/.env
+
+# 🧠 ML Model Files - Only ignore unnecessary formats
+models/*.pt
+models/*.joblib
+models/*.tflite
+models/test*
+models/placeholder*
+
+# ✅ Keep all your real/dummy models (like tomato_model.h5, maize.pkl)
+!models/*.h5
+!models/*.pkl
+
+# 📁 Keep model folder even if empty
+!models/.gitkeep
+
+# 🐍 Python virtual environments
+venv/
+**/venv/
+
+# 🔁 Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 📦 Frontend junk
+**/node_modules/
+
+# 💻 IDE/OS junk files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# 🖼️ Static upload and report folders (optional – if storing runtime files only)
+flask/static/uploads/
+flask/static/reports/
